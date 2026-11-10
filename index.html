@@ -1,114 +1,590 @@
-<!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#2563eb">
-<title>SILELET QR Scanner</title>
-<style>
-:root{
-  --bg:#061426;--bg2:#081b33;--card:#0b2340;--card2:#0e2d50;
-  --blue:#2563eb;--blue2:#1d4ed8;--blue3:#3b82f6;--light:#60a5fa;
-  --text:#f8fbff;--muted:#a9bfd9;--border:rgba(96,165,250,.18);
-  --danger:#dc2626;
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);
-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-body{background:radial-gradient(circle at 50% -10%,rgba(37,99,235,.28),transparent 40%),linear-gradient(180deg,#071a30,#061426)}
-.app{width:100%;max-width:760px;min-height:100vh;margin:auto;background:linear-gradient(180deg,#0b2340,#061426);overflow:hidden}
-header{position:relative;padding:calc(16px + env(safe-area-inset-top)) 17px 17px;
-background:linear-gradient(135deg,#2563eb,#1d4ed8 55%,#173f91);border-bottom:1px solid rgba(255,255,255,.1);overflow:hidden}
-header:before{content:"";position:absolute;width:210px;height:210px;right:-90px;top:-125px;border-radius:50%;background:rgba(147,197,253,.18)}
-header:after{content:"";position:absolute;width:130px;height:130px;left:-75px;bottom:-100px;border-radius:50%;background:rgba(255,255,255,.06)}
-.header-inner{position:relative;z-index:1;display:flex;align-items:center;gap:12px}
-.logo{width:46px;height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:center;border-radius:15px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.16);font-size:22px}
-h1{margin:0;font-size:20px;line-height:1.2;font-weight:800;letter-spacing:-.3px}
-.sub{margin-top:5px;font-size:12px;color:rgba(255,255,255,.76)}
-main{padding:14px;padding-bottom:calc(22px + env(safe-area-inset-bottom))}
-.scanner-card{padding:7px;border-radius:23px;background:linear-gradient(145deg,#123a63,#081b32);border:1px solid var(--border);box-shadow:0 15px 45px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.035)}
-.stage{position:relative;width:100%;background:#000;border-radius:18px;overflow:hidden;aspect-ratio:3/4;max-height:68vh;min-height:300px}
-.stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.1),transparent 25%,transparent 75%,rgba(0,0,0,.25))}
-video{display:block;width:100%;height:100%;object-fit:cover;background:#000}
-.frame{position:absolute;inset:21% 12%;border:2px solid rgba(255,255,255,.92);border-radius:23px;box-shadow:0 0 0 9999px rgba(0,0,0,.48),0 0 30px rgba(37,99,235,.3);pointer-events:none}
-.frame:before,.frame:after{content:"";position:absolute;width:31px;height:31px;border-color:var(--light);border-style:solid;filter:drop-shadow(0 0 7px rgba(96,165,250,.7))}
-.frame:before{left:-3px;top:-3px;border-width:4px 0 0 4px;border-radius:13px 0 0 0}
-.frame:after{right:-3px;bottom:-3px;border-width:0 4px 4px 0;border-radius:0 0 13px 0}
-.scan-line{position:absolute;left:7%;right:7%;top:15%;height:2px;background:linear-gradient(90deg,transparent,#60a5fa,#dbeafe,#60a5fa,transparent);box-shadow:0 0 12px #3b82f6,0 0 25px rgba(59,130,246,.7);animation:scanline 2.2s ease-in-out infinite}
-@keyframes scanline{0%,100%{top:15%;opacity:.35}50%{top:82%;opacity:1}}
-.scan-label{position:absolute;left:50%;bottom:10%;transform:translateX(-50%);padding:7px 13px;border-radius:999px;background:rgba(3,15,30,.8);border:1px solid rgba(96,165,250,.2);color:#dbeafe;font-size:11px;font-weight:700;white-space:nowrap;backdrop-filter:blur(8px)}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
-button,select{width:100%;min-height:49px;border:1px solid transparent;border-radius:14px;padding:10px 12px;font:inherit;transition:transform .15s ease,filter .15s ease}
-button:active{transform:scale(.97)}button{cursor:pointer;color:#fff;font-weight:750}
-.primary{background:linear-gradient(135deg,#3b82f6,#2563eb,#1d4ed8);box-shadow:0 8px 22px rgba(37,99,235,.25)}
-.secondary{background:linear-gradient(135deg,#16416d,#103456);border-color:rgba(96,165,250,.12)}
-.danger{background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 7px 18px rgba(220,38,38,.18)}
-button:hover{filter:brightness(1.08)}
-select{grid-column:1/-1;background:#eff6ff;color:#10233c;border-color:rgba(255,255,255,.15);outline:none}
-select:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(59,130,246,.18)}
-.status{display:flex;align-items:center;gap:9px;min-height:48px;padding:12px 14px;margin-top:12px;border-radius:14px;background:linear-gradient(135deg,#123a63,#0d2b4a);border:1px solid rgba(96,165,250,.15);color:#dbeafe;font-size:13px;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.15)}
-.status:before{content:"";width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:#60a5fa;box-shadow:0 0 10px rgba(96,165,250,.85)}
-.result{margin-top:9px;padding:14px;min-height:58px;border-radius:14px;background:linear-gradient(135deg,#061426,#091d35);border:1px solid rgba(96,165,250,.1);color:#eaf3ff;font-size:13px;line-height:1.5;font-weight:700;word-break:break-word}
-.info{display:flex;justify-content:center;align-items:center;gap:7px;margin-top:14px;color:#718caf;font-size:11px;text-align:center}
-.info-dot{width:5px;height:5px;border-radius:50%;background:#60a5fa;box-shadow:0 0 7px rgba(96,165,250,.7)}
-.hide{display:none!important}
-@media(max-width:520px){.app{max-width:none}.stage{min-height:285px}.frame{inset:23% 10%}.controls{gap:8px}button,select{min-height:48px;font-size:14px}.logo{width:43px;height:43px;flex-basis:43px}h1{font-size:18px}main{padding:11px}}
-@media(min-width:521px){body{padding:18px 0}.app{min-height:calc(100vh - 36px);border-radius:25px;border:1px solid rgba(96,165,250,.1)}header{border-radius:25px 25px 0 0}}
-@media(prefers-reduced-motion:reduce){.scan-line{animation:none}}
-</style>
-</head>
-<body>
-<div class="app">
-<header><div class="header-inner"><div class="logo">📷</div><div><h1>ABSENSIQR Scanner</h1><div class="sub">Scan QR siswa • Kamera depan & belakang • Android & iPhone</div></div></div></header>
-<main>
-<div class="scanner-card"><div class="stage"><video id="video" autoplay muted playsinline></video><div class="frame"><div class="scan-line"></div></div><div class="scan-label">Arahkan QR ke dalam kotak</div></div></div>
-<div class="controls">
-<button id="start" class="primary">▶️ Mulai Kamera</button>
-<button id="back" class="secondary">↩️ Kembali ke ABSENSIQR</button>
-<button id="flip" class="secondary">🔄 Depan / Belakang</button>
-<button id="stop" class="danger">⏹️ Stop</button>
-<select id="camera"><option value="">Pilih kamera (otomatis)</option></select>
-<button id="photo" class="secondary">📸 Scan Foto</button>
-<button id="soundTest" class="primary">🔊 Tes Suara Absensi</button>
-<input id="file" class="hide" type="file" accept="image/*" capture="environment">
-</div>
-<div id="status" class="status">Siap. Tekan Mulai Kamera.</div>
-<div id="result" class="result">Belum ada QR terbaca.</div>
-<div class="info"><span class="info-dot"></span>ABSENSIQR Attendance System<span class="info-dot"></span></div>
-</main>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+
 <script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id),video=$('video'),status=$('status'),result=$('result'),camera=$('camera');
-const params=new URLSearchParams(location.search),returnOrigin=params.get('returnOrigin')||'',nonce=params.get('nonce')||'';
-let controls=null,reader=null,devices=[],facing='environment',running=false,delivering=false,lastCode='',lastTime=0;
-function post(type,data={}){if(!window.opener||window.opener.closed||!returnOrigin)return false;try{window.opener.postMessage({...data,type,nonce},returnOrigin);return true}catch(e){return false}}
-function say(s){status.textContent=s}
-function stop(){running=false;delivering=false;try{controls?.stop()}catch(e){}controls=null;try{video.pause();video.srcObject=null}catch(e){}}
-function friendly(e){const n=e?.name||'';if(n==='NotAllowedError'||n==='PermissionDeniedError')return 'Izin kamera ditolak. Izinkan kamera untuk situs SILELET di pengaturan browser.';if(n==='NotFoundError'||n==='DevicesNotFoundError')return 'Kamera tidak ditemukan pada perangkat.';if(n==='NotReadableError'||n==='TrackStartError')return 'Kamera sedang digunakan aplikasi lain. Tutup aplikasi kamera lain.';if(n==='OverconstrainedError'||n==='ConstraintNotSatisfiedError')return 'Kamera pilihan tidak tersedia. Pilih kamera lain.';return e?.message||'Kamera gagal dibuka. Periksa izin kamera dan HTTPS.'}
-async function enumerate(){try{devices=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput')}catch(e){devices=[]}const old=camera.value;camera.innerHTML='<option value="">Pilih kamera (otomatis)</option>';devices.forEach((d,i)=>{let o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||Kamera ${i+1};camera.appendChild(o)});if(old&&devices.some(d=>d.deviceId===old))camera.value=old}
-function selectedConstraints(){const id=camera.value;if(id)return{audio:false,video:{deviceId:{exact:id}}};return{audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}}}}
-async function startCamera(){await primeAudio();stop();if(!navigator.mediaDevices?.getUserMedia)throw Error('Buka scanner melalui HTTPS di Chrome/Safari terbaru.');say('Meminta izin dan membuka kamera…');let stream;try{stream=await navigator.mediaDevices.getUserMedia(selectedConstraints())}catch(first){try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing}}})}catch(second){try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:true})}catch(last){throw last||second||first}}}video.srcObject=stream;await new Promise((resolve,reject)=>{if(video.readyState>=2){resolve();return}video.onloadedmetadata=()=>resolve();video.onerror=()=>reject(Error('Video kamera tidak dapat dimuat.'));setTimeout(()=>video.readyState>=2?resolve():reject(Error('Kamera tidak memberi gambar.')),8000)});await video.play();running=true;await enumerate();const track=stream.getVideoTracks()[0],settings=track?.getSettings?.()||{};if(settings.deviceId)camera.value=settings.deviceId;const label=devices.find(d=>d.deviceId===settings.deviceId)?.label||'Kamera aktif';say('✓ '+label+'. Arahkan QR ke kotak.');result.textContent='Kamera aktif. Menunggu QR…';post('SILELET_SCANNER_STATUS',{status:'Kamera aktif',facing:settings.facingMode||facing});await decodeLoop()}
-async function decodeLoop(){if(!running)return;if(!window.ZXingBrowser){say('Library QR gagal dimuat. Periksa koneksi internet lalu muat ulang.');return}reader=new ZXingBrowser.BrowserQRCodeReader();try{await reader.decodeFromVideoElement(video,(r,e)=>{if(!running)return;if(r)deliver(r.getText())})}catch(e){if(running)say('Scanner berhenti. Coba buka kamera kembali.')}}
-let absensiqrAudioCtx=null,lastAudioAt=0;
-async function primeAudio(){try{const AC=window.AudioContext||window.webkitAudioContext;if(AC){absensiqrAudioCtx=sileletAudioCtx||new AC();if(sileletAudioCtx.state==='suspended')await sileletAudioCtx.resume()}}catch(e){console.log('Audio init:',e)}}
-function beep(success){try{if(!sileletAudioCtx)return;const ctx=sileletAudioCtx,freqs=success?[880,1175,1568]:[440,330];freqs.forEach((freq,i)=>{const start=ctx.currentTime+i*(success?.13:.19),osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,start);gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.24,start+.025);gain.gain.exponentialRampToValueAtTime(.0001,start+.16);osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+.17)})}catch(e){console.log('Beep error:',e)}}
-function announceAttendance(success,message){const now=Date.now();if(now-lastAudioAt<900)return;lastAudioAt=now;beep(success);if('speechSynthesis'in window){try{window.speechSynthesis.cancel();const utter=new SpeechSynthesisUtterance(success?'Absensi berhasil':(message||'Absensi gagal'));utter.lang='id-ID';utter.rate=.92;utter.pitch=success?1.05:.9;utter.volume=1;window.speechSynthesis.speak(utter)}catch(e){console.log('Speech error:',e)}}}
-function deliver(code){const now=Date.now();code=String(code||'').trim();if(!code||(code===lastCode&&now-lastTime<2500)||delivering)return;lastCode=code;lastTime=now;delivering=true;result.textContent='QR: '+code;say('QR terbaca. Mengirim ke ABSENSIQR…');const sent=post('ABSENSIQR_QR_SCAN',{code,scanId:(nonce||'scan')+':'+now});if(!sent){say('QR terbaca, tetapi ABSENSI QR tidak terhubung.');result.textContent='GAGAL TERHUBUNG: scanner tidak memiliki jendela induk ABSENSIQR.';delivering=false;return}try{navigator.vibrate?.(80)}catch(e){}setTimeout(()=>{if(delivering){say('Belum ada konfirmasi dari ABSENSIQR. Periksa koneksi/halaman ABSENSIQR.');result.textContent='QR terkirim ke halaman ABSENSIQR, menunggu konfirmasi database.';delivering=false}},12000)}
-async function flipCamera(){facing=facing==='environment'?'user':'environment';camera.value='';try{await startCamera()}catch(e){say('✕ '+friendly(e));post('ABSENSIQR_SCANNER_ERROR',{message:friendly(e)})}}
-$('start').onclick=async()=>{try{await startCamera()}catch(e){say('✕ '+friendly(e));post('ABSENSIQR_SCANNER_ERROR',{message:friendly(e)})}};
-$('back').onclick=()=>{stop();post('ABSENSIQR_SCANNER_CLOSE',{});say('Kembali ke ABSENSIQR…');setTimeout(()=>{try{window.close()}catch(e){}},80)};
-$('soundTest').onclick=async()=>{await primeAudio();announceAttendance(true);say('Tes suara: Absensi berhasil. Jika tidak terdengar, naikkan volume media dan nonaktifkan mode senyap.')};
-$('flip').onclick=flipCamera;
-$('stop').onclick=()=>{stop();say('Kamera dihentikan.');post('ABSEN QR_SCANNER_STATUS',{status:'Kamera dihentikan'})};
-camera.onchange=async()=>{if(camera.value){try{await startCamera()}catch(e){say('✕ '+friendly(e))}}};
-$('photo').onclick=()=>$('file').click();
-$('file').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{say('Membaca QR dari foto…');if(!window.ZXingBrowser)throw Error('Library QR belum dimuat.');const url=URL.createObjectURL(f),img=new Image();img.onload=async()=>{try{const r=await new ZXingBrowser.BrowserQRCodeReader().decodeFromImageElement(img);deliver(r.getText())}catch(err){say('QR tidak ditemukan pada foto. Coba foto yang lebih jelas.')}finally{URL.revokeObjectURL(url)}};img.onerror=()=>{URL.revokeObjectURL(url);say('Foto tidak dapat dibaca.')};img.src=url}catch(err){say(err.message||'Gagal membaca foto.')}finally{e.target.value=''}};
-addEventListener('message',e=>{if(returnOrigin&&e.origin!==returnOrigin)return;const d=e.data||{};if(nonce&&d.nonce!==nonce)return;if(d.type==='ABSENSIQR_STOP_SCANNER'){stop();say('Scanner dihentikan oleh ABSENSIQR.')}if(d.type==='ABSENSIQR_SCAN_RESULT'){delivering=false;const isSuccess=d.ok===true||d.success===true||String(d.status||d.result||'').toLowerCase()==='success'||String(d.status||d.result||'').toLowerCase()==='berhasil';if(isSuccess){say('✓ ABSENSIQR mengonfirmasi absensi berhasil.');result.textContent='TERSIMPAN: '+(d.name||d.message||'Absensi siswa berhasil disimpan.');announceAttendance(true)}else{const msg=d.message||d.error||'Absensi gagal atau siswa ditolak';say('✕ ABSENSIQR menolak atau gagal menyimpan absensi.');result.textContent='GAGAL: '+msg;announceAttendance(false,msg)}}});
-addEventListener('load',async()=>{await enumerate();say('Membuka kamera otomatis…');try{await startCamera()}catch(e){say('✕ '+friendly(e)+' Tekan Mulai Kamera jika diperlukan.');post('ABSENSIQR_SCANNER_ERROR',{message:friendly(e)})}});
-addEventListener('pagehide',stop);
+(function () {
+'use strict';
+
+const $ = id => document.getElementById(id);
+
+const video = $('video');
+const statusBox = $('status');
+const resultBox = $('result');
+const camera = $('camera');
+
+const params = new URLSearchParams(location.search);
+const returnOrigin = params.get('returnOrigin') || '';
+const nonce = params.get('nonce') || '';
+
+let reader = null;
+let controls = null;
+let devices = [];
+let facing = 'environment';
+let running = false;
+let delivering = false;
+let lastCode = '';
+let lastTime = 0;
+
+let audioCtx = null;
+let lastAudioAt = 0;
+
+// ===============================
+// STATUS DAN KOMUNIKASI
+// ===============================
+
+function say(message) {
+  statusBox.textContent = message;
+}
+
+function post(type, data = {}) {
+  if (!window.opener || window.opener.closed || !returnOrigin) {
+    return false;
+  }
+
+  try {
+    window.opener.postMessage(
+      { ...data, type, nonce },
+      returnOrigin
+    );
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+// ===============================
+// IZIN DAN DAFTAR KAMERA
+// ===============================
+
+async function enumerateCameras() {
+  try {
+    devices = (await navigator.mediaDevices.enumerateDevices())
+      .filter(device => device.kind === 'videoinput');
+  } catch (error) {
+    devices = [];
+  }
+
+  const oldValue = camera.value;
+
+  camera.innerHTML =
+    '<option value="">Pilih kamera (otomatis)</option>';
+
+  devices.forEach((device, index) => {
+    const option = document.createElement('option');
+
+    option.value = device.deviceId;
+    option.textContent =
+      device.label || `Kamera ${index + 1}`;
+
+    camera.appendChild(option);
+  });
+
+  if (oldValue && devices.some(d => d.deviceId === oldValue)) {
+    camera.value = oldValue;
+  }
+}
+
+// ===============================
+// PESAN KESALAHAN KAMERA
+// ===============================
+
+function friendly(error) {
+  const name = error?.name || '';
+
+  if (name === 'NotAllowedError' ||
+      name === 'PermissionDeniedError') {
+    return 'Izin kamera ditolak. Izinkan akses kamera pada pengaturan browser.';
+  }
+
+  if (name === 'NotFoundError' ||
+      name === 'DevicesNotFoundError') {
+    return 'Kamera tidak ditemukan pada perangkat.';
+  }
+
+  if (name === 'NotReadableError' ||
+      name === 'TrackStartError') {
+    return 'Kamera sedang digunakan aplikasi lain. Tutup aplikasi tersebut.';
+  }
+
+  if (name === 'OverconstrainedError' ||
+      name === 'ConstraintNotSatisfiedError') {
+    return 'Kamera pilihan tidak tersedia. Pilih kamera lainnya.';
+  }
+
+  if (!window.isSecureContext) {
+    return 'Scanner harus dibuka melalui HTTPS.';
+  }
+
+  return error?.message || 'Kamera gagal dibuka. Periksa izin kamera.';
+}
+
+// ===============================
+// AUDIO DAN SUARA ABSENSI
+// ===============================
+
+async function primeAudio() {
+  try {
+    const AudioContextClass =
+      window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextClass) return;
+
+    if (!audioCtx) {
+      audioCtx = new AudioContextClass();
+    }
+
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
+  } catch (error) {
+    console.log('Audio:', error);
+  }
+}
+
+function beep(success) {
+  try {
+    if (!audioCtx) return;
+
+    const frequencies = success
+      ? [880, 1175, 1568]
+      : [440, 330];
+
+    frequencies.forEach((frequency, index) => {
+      const start = audioCtx.currentTime + index * 0.15;
+
+      const oscillator = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, start);
+
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.2, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.16);
+
+      oscillator.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      oscillator.start(start);
+      oscillator.stop(start + 0.18);
+    });
+  } catch (error) {
+    console.log('Beep:', error);
+  }
+}
+
+function announceAttendance(success, message) {
+  const now = Date.now();
+
+  if (now - lastAudioAt < 900) return;
+
+  lastAudioAt = now;
+  beep(success);
+
+  if ('speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(
+        success ? 'Absensi berhasil' : (message || 'Absensi gagal')
+      );
+
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.92;
+      utterance.pitch = success ? 1.05 : 0.9;
+      utterance.volume = 1;
+
+      window.speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.log('Speech:', error);
+    }
+  }
+}
+
+// ===============================
+// STOP KAMERA
+// ===============================
+
+function stop() {
+  running = false;
+  delivering = false;
+
+  try {
+    if (controls) {
+      controls.stop();
+      controls = null;
+    }
+  } catch (error) {
+    console.log('Stop scanner:', error);
+  }
+
+  try {
+    if (video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+    }
+
+    video.pause();
+  } catch (error) {
+    console.log('Stop video:', error);
+  }
+}
+
+// ===============================
+// PROSES QR
+// ===============================
+
+function deliver(code) {
+  const now = Date.now();
+
+  code = String(code || '').trim();
+
+  if (!code) return;
+
+  if (code === lastCode && now - lastTime < 2500) {
+    return;
+  }
+
+  if (delivering) return;
+
+  lastCode = code;
+  lastTime = now;
+  delivering = true;
+
+  resultBox.textContent = 'QR: ' + code;
+  say('QR terbaca. Mengirim ke ABSENSIQR...');
+
+  const sent = post('ABSENSIQR_QR_SCAN', {
+    code: code,
+    scanId: (nonce || 'scan') + ':' + now
+  });
+
+  if (!sent) {
+    say('QR terbaca, tetapi ABSENSIQR tidak terhubung.');
+    resultBox.textContent =
+      'GAGAL TERHUBUNG: Buka scanner melalui aplikasi ABSENSIQR.';
+
+    delivering = false;
+    return;
+  }
+
+  try {
+    navigator.vibrate?.(80);
+  } catch (error) {}
+
+  setTimeout(() => {
+    if (delivering) {
+      say('Menunggu konfirmasi dari ABSENSIQR...');
+      resultBox.textContent =
+        'QR terkirim. Menunggu konfirmasi database.';
+      delivering = false;
+    }
+  }, 12000);
+}
+
+// ===============================
+// MEMULAI KAMERA DAN SCANNER
+// ===============================
+
+async function startCamera() {
+  if (!navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia) {
+    throw new Error(
+      'Kamera membutuhkan HTTPS dan browser yang mendukung getUserMedia.'
+    );
+  }
+
+  if (!window.ZXingBrowser ||
+      !ZXingBrowser.BrowserQRCodeReader) {
+    throw new Error(
+      'Library QR gagal dimuat. Periksa koneksi internet.'
+    );
+  }
+
+  stop();
+
+  say('Meminta izin kamera...');
+
+  reader = new ZXingBrowser.BrowserQRCodeReader();
+
+  const callback = (qr, error) => {
+    if (!running) return;
+
+    if (qr) {
+      deliver(qr.getText());
+    }
+  };
+
+  try {
+    if (camera.value) {
+      controls = await reader.decodeFromVideoDevice(
+        camera.value,
+        video,
+        callback
+      );
+    } else {
+      controls = await reader.decodeFromConstraints(
+        {
+          audio: false,
+          video: {
+            facingMode: { ideal: facing },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        },
+        video,
+        callback
+      );
+    }
+
+    running = true;
+
+    await enumerateCameras();
+
+    const stream = video.srcObject;
+    const track = stream?.getVideoTracks?.()[0];
+    const settings = track?.getSettings?.() || {};
+
+    if (settings.deviceId) {
+      camera.value = settings.deviceId;
+    }
+
+    say('✓ Kamera aktif. Arahkan QR ke dalam kotak.');
+    resultBox.textContent = 'Kamera aktif. Menunggu QR...';
+
+    post('ABSENSIQR_SCANNER_STATUS', {
+      status: 'Kamera aktif',
+      facing: settings.facingMode || facing
+    });
+
+  } catch (error) {
+    stop();
+    throw error;
+  }
+}
+
+// ===============================
+// GANTI KAMERA DEPAN / BELAKANG
+// ===============================
+
+async function flipCamera() {
+  facing = facing === 'environment'
+    ? 'user'
+    : 'environment';
+
+  camera.value = '';
+
+  try {
+    await startCamera();
+  } catch (error) {
+    say('✕ ' + friendly(error));
+
+    post('ABSENSIQR_SCANNER_ERROR', {
+      message: friendly(error)
+    });
+  }
+}
+
+// ===============================
+// TOMBOL
+// ===============================
+
+$('start').addEventListener('click', async () => {
+  await primeAudio();
+
+  try {
+    await startCamera();
+  } catch (error) {
+    say('✕ ' + friendly(error));
+
+    post('ABSENSIQR_SCANNER_ERROR', {
+      message: friendly(error)
+    });
+  }
+});
+
+$('stop').addEventListener('click', () => {
+  stop();
+
+  say('Kamera dihentikan.');
+  resultBox.textContent = 'Scanner tidak aktif.';
+
+  post('ABSENSIQR_SCANNER_STATUS', {
+    status: 'Kamera dihentikan'
+  });
+});
+
+$('flip').addEventListener('click', flipCamera);
+
+$('back').addEventListener('click', () => {
+  stop();
+
+  post('ABSENSIQR_SCANNER_CLOSE', {});
+
+  say('Kembali ke ABSENSIQR...');
+
+  setTimeout(() => {
+    try {
+      window.close();
+    } catch (error) {}
+  }, 100);
+});
+
+camera.addEventListener('change', async () => {
+  if (!camera.value) return;
+
+  try {
+    await startCamera();
+  } catch (error) {
+    say('✕ ' + friendly(error));
+  }
+});
+
+$('soundTest').addEventListener('click', async () => {
+  await primeAudio();
+
+  beep(true);
+
+  if ('speechSynthesis' in window) {
+    const speech = new SpeechSynthesisUtterance(
+      'Absensi berhasil'
+    );
+    speech.lang = 'id-ID';
+    window.speechSynthesis.speak(speech);
+  }
+
+  say('Tes suara berhasil dijalankan.');
+});
+
+// ===============================
+// SCAN QR DARI FOTO
+// ===============================
+
+$('photo').addEventListener('click', () => {
+  $('file').click();
+});
+
+$('file').addEventListener('change', async event => {
+  const file = event.target.files?.[0];
+
+  if (!file) return;
+
+  let url = null;
+
+  try {
+    say('Membaca QR dari foto...');
+
+    if (!window.ZXingBrowser) {
+      throw new Error('Library QR belum dimuat.');
+    }
+
+    url = URL.createObjectURL(file);
+
+    const image = new Image();
+
+    image.onload = async () => {
+      try {
+        const imageReader =
+          new ZXingBrowser.BrowserQRCodeReader();
+
+        const qr = await imageReader.decodeFromImageElement(image);
+
+        deliver(qr.getText());
+
+      } catch (error) {
+        say('QR tidak ditemukan. Gunakan foto yang lebih jelas.');
+      } finally {
+        URL.revokeObjectURL(url);
+        $('file').value = '';
+      }
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      $('file').value = '';
+      say('Foto tidak dapat dibaca.');
+    };
+
+    image.src = url;
+
+  } catch (error) {
+    if (url) URL.revokeObjectURL(url);
+
+    $('file').value = '';
+    say(error.message || 'Gagal membaca foto.');
+  }
+});
+
+// ===============================
+// MENERIMA KONFIRMASI ABSENSI
+// ===============================
+
+window.addEventListener('message', event => {
+  if (returnOrigin && event.origin !== returnOrigin) {
+    return;
+  }
+
+  const data = event.data || {};
+
+  if (nonce && data.nonce !== nonce) {
+    return;
+  }
+
+  if (data.type === 'ABSENSIQR_STOP_SCANNER') {
+    stop();
+    say('Scanner dihentikan oleh ABSENSIQR.');
+  }
+
+  if (data.type === 'ABSENSIQR_SCAN_RESULT') {
+    delivering = false;
+
+    const success =
+      data.ok === true ||
+      data.success === true ||
+      ['success', 'berhasil'].includes(
+        String(data.status || data.result || '').toLowerCase()
+      );
+
+    if (success) {
+      say('✓ Absensi berhasil disimpan.');
+
+      resultBox.textContent =
+        'TERSIMPAN: ' +
+        (data.name || data.message || 'Absensi siswa berhasil.');
+
+      announceAttendance(true);
+
+    } else {
+      const message =
+        data.message || data.error || 'Absensi gagal disimpan.';
+
+      say('✕ Absensi gagal.');
+
+      resultBox.textContent = 'GAGAL: ' + message;
+
+      announceAttendance(false, message);
+    }
+  }
+});
+
+// ===============================
+// SAAT HALAMAN DIBUKA
+// ===============================
+
+window.addEventListener('load', async () => {
+  await enumerateCameras();
+
+  say('Scanner siap. Tekan Mulai Kamera.');
+
+  // Percobaan otomatis. Jika browser memerlukan interaksi,
+  // pengguna masih bisa menekan tombol Mulai Kamera.
+  try {
+    await startCamera();
+  } catch (error) {
+    say('✕ ' + friendly(error) +
+      ' Tekan Mulai Kamera untuk mencoba kembali.');
+  }
+});
+
+window.addEventListener('pagehide', stop);
+
 })();
 </script>
-</body>
-</html>
